@@ -1,0 +1,21 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Diagnose</title>
+<style>body{font:16px/1.4 -apple-system,sans-serif;padding:16px;max-width:720px;margin:auto}pre{white-space:pre-wrap;background:#f2f2f4;padding:12px;border-radius:10px;font-size:14px}button{font-size:18px;padding:14px 22px;border-radius:12px;border:0;background:#D2202E;color:#fff}.ok{color:#0a7d33}.bad{color:#c00;font-weight:700}</style></head><body>
+<h2>Diagnose Theo's Projekte</h2><p>Tippe zuerst auf den Knopf, dann mach einen Screenshot vom ganzen Text.</p>
+<button id="b">Tippen testen: <span id="n">0</span></button><pre id="o">läuft …</pre>
+<script>
+var o=document.getElementById('o'),L=[];function add(k,v,ok){L.push((ok===false?'✗ ':'✓ ')+k+': '+v);o.textContent=L.join('\n')}
+document.getElementById('b').addEventListener('click',function(){var n=document.getElementById('n');n.textContent=+n.textContent+1});
+add('Browser',navigator.userAgent);add('Adresse',location.href);
+add('Array.at',typeof [].at,typeof [].at==='function');
+add('localStorage',(function(){try{localStorage.setItem('t','1');return 'ok'}catch(e){return 'FEHLER '+e}})());
+add('serviceWorker','serviceWorker' in navigator?'ja':'nein');
+try{var r=indexedDB.open('diag-test',1);var t=setTimeout(function(){add('IndexedDB','antwortet nicht (8s)',false)},8000);r.onupgradeneeded=function(){r.result.createObjectStore('x')};r.onsuccess=function(){clearTimeout(t);add('IndexedDB','ok')};r.onerror=function(){clearTimeout(t);add('IndexedDB','Fehler '+r.error,false)}}catch(e){add('IndexedDB','Ausnahme '+e,false)}
+fetch('index.html',{cache:'no-store'}).then(function(x){return x.text().then(function(t){
+  add('index.html','Status '+x.status+', '+Math.round(t.length/1024)+' KB, Version '+(t.indexOf('dlg-bd')>-1?'NEU (Dialog-Fix v3)':'ALT (bitte neu hochladen)'),x.ok);
+  add('Fremd-Skripte im HTML',(t.match(/<script[^>]*src=[^>]*>/g)||[]).join(' ')||'keine');
+  var ms=t.match(/<script>([\s\S]*?)<\/script>/g)||[];var big='';ms.forEach(function(s){if(s.length>big.length)big=s});big=big.replace(/^<script>|<\/script>$/g,'');
+  try{new Function(big);add('Haupt-Skript lesbar','ja')}catch(e){add('Haupt-Skript lesbar','NEIN: '+e.message,false)}
+  var m=t.match(/<body[^>]*>/);add('Ausgeliefertes HTML endet mit',t.slice(-120).replace(/\s+/g,' '));
+})}).catch(function(e){add('index.html laden','Fehler '+e,false)});
+fetch('local.js',{cache:'no-store'}).then(function(x){return x.text().then(function(t){add('local.js','Status '+x.status+', beginnt mit: '+t.slice(0,40).replace(/\s+/g,' '),x.ok&&t.indexOf('claude')>-1)})}).catch(function(e){add('local.js','Fehler '+e,false)});
+</script></body></html>
